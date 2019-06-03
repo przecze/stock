@@ -1,0 +1,4 @@
+RESOURCES_DIR="resources"
+RESOURCE_EXT=".csv"
+RESOURCE_CLOSE_KEY="Zamkniecie"
+RESOURCE_DATE_KEY="Data"

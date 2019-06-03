@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import urllib.request
 import os
-RESOURCES_DIR="resources"
-RESOURCE_EXT=".csv"
+from util import *
 def createUrl(company_code: str):
     return "https://stooq.pl/q/d/l/?s={}&d1=20050101&d2=20100101&i=d".format(company_code)
 

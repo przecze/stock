@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import os
 import pandas
-RESOURCES_DIR="resources"
-RESOURCE_EXT=".csv"
-RESOURCE_CLOSE_KEY="Zamkniecie"
-RESOURCE_DATE_KEY="Data"
+from util import *
 def loadDataFile(file_name: str):
     data = pandas.read_csv(file_name)
     data = data.rename(columns={RESOURCE_DATE_KEY:"Date", RESOURCE_CLOSE_KEY:"Close"})
