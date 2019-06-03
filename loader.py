@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import pandas
+import datetime
 from util import *
 def loadDataFile(file_name: str):
     data = pandas.read_csv(file_name)
@@ -34,8 +35,11 @@ def loadAllAndClear(list_file_name: str):
         print("Removing rows with partial data...")
         data = data.dropna()
         print("Done")
+        data = data.set_index("Date")
         return data
 def calculateCorrelation(data):
     corr_df = data.corr(method='pearson')
     del corr_df.index.name
+    return corr_df
 data = loadAllAndClear("gpw_2007_list.txt")
+corr = calculateCorrelation(data.loc['2005-01-01':'2005-02-01'])
