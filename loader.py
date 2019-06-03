@@ -31,6 +31,11 @@ def loadAllAndClear(list_file_name: str):
             if data[code].isnull().iloc[0] or data[code].isnull().iloc[-1]:
                 print("Removing data for index "+code+" because only part of the time window is avaliable")
                 del data[code]
-        data = data.dropna() # remove rows with nan's
+        print("Removing rows with partial data...")
+        data = data.dropna()
+        print("Done")
         return data
+def calculateCorrelation(data):
+    corr_df = data.corr(method='pearson')
+    del corr_df.index.name
 data = loadAllAndClear("gpw_2007_list.txt")
