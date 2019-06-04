@@ -21,4 +21,4 @@ def processList(listFileName: str, start: int):
                     print("stopping at line = "+ line)
                     return
 
-processList("gpw_2007_list.txt", 95)
+processList("gpw_2007_list.txt", 190)
