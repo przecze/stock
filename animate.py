@@ -38,10 +38,10 @@ def animate(i):
         G_old = G_new
         pos_old = pos_new
         G_new = mst(networks[network_index+1])
-        pos_new = nx.spring_layout(G_new)
+        pos_new = nx.spring_layout(G_new, pos=pos_old)
         alpha = 0.
     ax.clear()
-    nx.draw(G_old if i<(FRAMES_PER_TRANSITION/2) else G_new, pos=transitionPositions(pos_old, pos_new, alpha), ax=ax)
+    nx.draw(G_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else G_new, pos=transitionPositions(pos_old, pos_new, alpha), ax=ax)
     alpha +=1./FRAMES_PER_TRANSITION
     return ax,
 
