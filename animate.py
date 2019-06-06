@@ -34,54 +34,71 @@ matplotlib.animation.Animation._blit_draw = _blit_draw
 #
 
 import networkx as nx
+import datetime
 import pandas
 
 import loader
 import analyze
 
-def transitionPositions(pos1, pos2, alpha):
-    return {n: (1-alpha)*pos1[n] + alpha*pos2[n] for n in pos1.keys()}
+def averageDict(d1: dict, d2: dict, alpha):
+    return {n: (1-alpha)*d1[n] + alpha*d2[n] for n in d1.keys()}
 
 def mst(G):
-    return nx.algorithms.tree.minimum_spanning_tree(G)
+    return nx.algorithms.tree.mst.minimum_spanning_tree(G)
 
-data = loader.loadAllAndClean("gpw_2007_list.txt")
-networks = analyze.createNetworksSeriesWithCount(data, 10)
+data = loader.loadCountAndClean("gpw_2007_list.txt", 30)
+networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007, month=12, day=1), end_date=datetime.date(year=2009, month=1, day=1))
 dates = pandas.DatetimeIndex(networks.index)
 
 positions = None
 fig, ax  = plt.subplots()
 
-network_index = -1
-FRAMES_PER_TRANSITION=20
+FRAMES_PER_TRANSITION=10
 def animate(i):
     global G_old
     global G_new
     global pos_old
     global pos_new
-    global network_index
     global alpha
     global date_old
     global date_new
+    global widths_new
+    global widths_old
     if(i == 0):
         G_new = mst(networks[0])
-        pos_new = nx.spring_layout(G_new)
+        pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)))
+        widths_new = [1/G_new[u][v]['weight'] for u, v in G_new.edges()]
     if(i%FRAMES_PER_TRANSITION == 0):
+        network_index = i//FRAMES_PER_TRANSITION
+        print(network_index)
         date_old = dates[network_index].date()
-        date_new = dates[network_index+1].date()
-        network_index+=1
+        date_new = dates[min(network_index+1, len(dates)-1)].date()
         G_old = G_new
         pos_old = pos_new
-        G_new = mst(networks[network_index+1])
-        pos_new = nx.spring_layout(G_new, pos=pos_old)
+        widths_old = widths_new
+        G_new = mst(networks[min(network_index+1, len(networks)-1)])
+        pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)), pos=pos_old)
+        widths_new = [1/G_new[u][v]['weight'] for u, v in G_new.edges()]
         alpha = 0.
     ax.clear()
     date_str = str(date_old) if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else str(date_new)
-    ttl = ax.text(.5, 1.05, date_str, transform = ax.transAxes, va='center')
-    nx.draw(G_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else G_new, pos=transitionPositions(pos_old, pos_new, alpha), ax=ax, with_labels = True)
+    ax.text(.5, 1.05, date_str, transform = ax.transAxes, va='center')
+
+    G_to_draw = G_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else G_new
+    pos_to_draw = averageDict(pos_old, pos_new, alpha)
+    widths_to_draw = widths_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else widths_new
+
+    nx.draw_networkx_nodes(G_to_draw, pos=pos_to_draw, ax=ax, node_size=500, node_color='lightgreen', edgecolor='black')
+
+    nx.draw_networkx_edges(G_to_draw, pos=pos_to_draw, ax=ax, edge_color='green', width=10*widths_to_draw)
+
+    nx.draw_networkx_labels(G_to_draw, pos=pos_to_draw, ax=ax, font_weigth='bold')
+
     alpha +=1./FRAMES_PER_TRANSITION
     return ax,
 
-ani = animation.FuncAnimation(fig, animate, np.arange(len(networks)*FRAMES_PER_TRANSITION),
-                              interval=25, blit=True)
-plt.show()
+ani = animation.FuncAnimation(fig, animate, frames=len(networks)*FRAMES_PER_TRANSITION,
+                              interval=10, blit=True)
+ani.save('./gif/animation.gif', writer='imagemagick', fps=60)
+
+#plt.show()

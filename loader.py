@@ -7,7 +7,7 @@ def loadDataFile(file_name: str):
     data = pandas.read_csv(file_name)
     data = data.rename(columns={RESOURCE_DATE_KEY:"Date", RESOURCE_CLOSE_KEY:"Close"})
     return data[["Date", "Close"]]
-def loadAllAndClean(list_file_name: str):
+def loadCountAndClean(list_file_name: str, count: int):
     resources_dir = os.path.join(os.getcwd(), RESOURCES_DIR)
     with open(list_file_name) as f:
         data = []
@@ -24,6 +24,8 @@ def loadAllAndClean(list_file_name: str):
                 continue
             company_data['Symbol'] = company_code
             data.append(company_data)
+            if len(data) == count:
+                break
         data = pandas.concat(data)
         data = data.pivot('Date', 'Symbol', 'Close').reset_index()
         for code in data.columns[1:]:# first column is "date"
@@ -35,3 +37,5 @@ def loadAllAndClean(list_file_name: str):
         print("Done")
         data = data.set_index("Date")
         return data
+def loadAllAndClean(list_file_name: str):
+        return loadCountAndClean(list_file_name, -1)
