@@ -17,7 +17,7 @@ def getTimeWindow(data, date):
 def createNetworksSeries(data, start_date, end_date):
     networks = []
     br = pandas.bdate_range(start_date, end_date)
-    for date in pandas.bdate_range(start_date, end_date):
+    for date in pandas.bdate_range(start_date, end_date, freq='w'):
         date = date.date() # remove wallclock time part
         print("Creating a network at :"+str(date))
         network = getNetwork(getTimeWindow(data, date))
