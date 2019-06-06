@@ -23,7 +23,9 @@ def createNetworksSeries(data, start_date, end_date):
         network = getNetwork(getTimeWindow(data, date))
         networks.append(pandas.Series([network], index = [date]))
     return pandas.concat(networks)
-
-data = loader.loadAllAndClean("gpw_2007_list.txt")
-dates = pandas.DatetimeIndex(data.index)
-networks = createNetworksSeries(data, (dates[0] + HALF_A_YEAR).date(), (dates[-1] - HALF_A_YEAR).date())
+def createNetworksSeriesFull(data):
+    dates = pandas.DatetimeIndex(data.index)
+    return createNetworksSeries(data, (dates[0] + HALF_A_YEAR).date(), (dates[-1] - HALF_A_YEAR).date())
+def createNetworksSeriesWithCount(data, count):
+    dates = pandas.DatetimeIndex(data.index)
+    return createNetworksSeries(data, (dates[0] + HALF_A_YEAR).date(), (dates[count] + HALF_A_YEAR).date())
