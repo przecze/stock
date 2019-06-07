@@ -7,6 +7,7 @@ def loadDataFile(file_name: str):
     data = pandas.read_csv(file_name)
     data = data.rename(columns={RESOURCE_DATE_KEY:"Date", RESOURCE_CLOSE_KEY:"Close"})
     return data[["Date", "Close"]]
+# loads only part of the data. Useful for development if you want to test something fast
 def loadCountAndClean(list_file_name: str, count: int):
     resources_dir = os.path.join(os.getcwd(), RESOURCES_DIR)
     with open(list_file_name) as f:

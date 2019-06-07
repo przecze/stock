@@ -26,6 +26,7 @@ def createNetworksSeries(data, start_date, end_date):
 def createNetworksSeriesFull(data):
     dates = pandas.DatetimeIndex(data.index)
     return createNetworksSeries(data, (dates[0] + HALF_A_YEAR).date(), (dates[-1] - HALF_A_YEAR).date())
+# creates the series only for the part of avaliable data. Useful for development if you want to test something fast
 def createNetworksSeriesWithCount(data, count):
     dates = pandas.DatetimeIndex(data.index)
     return createNetworksSeries(data, (dates[0] + HALF_A_YEAR).date(), (dates[count] + HALF_A_YEAR).date())
