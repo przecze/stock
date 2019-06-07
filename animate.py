@@ -51,7 +51,11 @@ networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007
 dates = pandas.DatetimeIndex(networks.index)
 
 positions = None
-fig, ax  = plt.subplots()
+fig = plt.figure()
+gs = matplotlib.gridspec.GridSpec(2, 1, height_ratios = [3, 1])
+ax_graph  = fig.add_subplot(gs[0])
+ax_plot = fig.add_subplot(gs[1])
+values = []
 
 FRAMES_PER_TRANSITION=10
 def animate(i):
@@ -64,13 +68,13 @@ def animate(i):
     global date_new
     global widths_new
     global widths_old
+    global values
     if(i == 0):
         G_new = mst(networks[0])
         pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)))
         widths_new = [1/G_new[u][v]['weight'] for u, v in G_new.edges()]
     if(i%FRAMES_PER_TRANSITION == 0):
         network_index = i//FRAMES_PER_TRANSITION
-        print(network_index)
         date_old = dates[network_index].date()
         date_new = dates[min(network_index+1, len(dates)-1)].date()
         G_old = G_new
@@ -80,25 +84,32 @@ def animate(i):
         pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)), pos=pos_old)
         widths_new = [1/G_new[u][v]['weight'] for u, v in G_new.edges()]
         alpha = 0.
-    ax.clear()
+        values.append(pandas.Series([max(widths_new)], index = [date_new]))
+    ax_graph.clear()
+    ax_plot.clear()
     date_str = str(date_old) if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else str(date_new)
-    ax.text(.5, 1.05, date_str, transform = ax.transAxes, va='center')
+    ttl = ax_graph.text(.5, 1.05, date_str, transform = ax_graph.transAxes, va='center')
 
     G_to_draw = G_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else G_new
     pos_to_draw = averageDict(pos_old, pos_new, alpha)
     widths_to_draw = widths_old if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else widths_new
+    plt.sca(ax_graph) # workaround for bug in nx.draw
 
-    nx.draw_networkx_nodes(G_to_draw, pos=pos_to_draw, ax=ax, node_size=500, node_color='lightgreen', edgecolor='black')
+    nx.draw_networkx_nodes(G_to_draw, pos=pos_to_draw, ax=ax_graph, node_size=500, node_color='lightgreen', edgecolor='black')
 
-    nx.draw_networkx_edges(G_to_draw, pos=pos_to_draw, ax=ax, edge_color='green', width=10*widths_to_draw)
+    nx.draw_networkx_edges(G_to_draw, pos=pos_to_draw, ax=ax_graph, edge_color='green', width=10*widths_to_draw)
 
-    nx.draw_networkx_labels(G_to_draw, pos=pos_to_draw, ax=ax, font_weigth='bold')
+    nx.draw_networkx_labels(G_to_draw, pos=pos_to_draw, ax=ax_graph, font_weigth='bold')
 
+    ax_plot.plot(pandas.concat(values))
+    ax_plot.set_xlim(dates[0], dates[-1])
+    ax_plot.get_xaxis().set_visible(True)
+    ax_plot.get_yaxis().set_visible(True)
     alpha +=1./FRAMES_PER_TRANSITION
-    return ax,
+    return (ax_plot, ax_graph, ttl)
 
 ani = animation.FuncAnimation(fig, animate, frames=len(networks)*FRAMES_PER_TRANSITION,
                               interval=10, blit=True)
-ani.save('./gif/animation.gif', writer='imagemagick', fps=60)
+#ani.save('./gif/animation.gif', writer='imagemagick', fps=60)
 
-#plt.show()
+plt.show()
