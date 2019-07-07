@@ -8,13 +8,13 @@ import scipy.stats as sts
 def mst(G):
     return nx.algorithms.tree.mst.minimum_spanning_tree(G)
 
-x = []
-y = []
-data = loader.loadCountAndClean("gpw_2007_list.txt", 30)
-networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007, month=12, day=1), end_date=datetime.date(year=2009, month=1, day=1))
-dates = pd.DatetimeIndex(networks.index)
-distance = analyze.calculateDistances(data)
 def entropy():
+    x = []
+    y = []
+    data = loader.loadCountAndClean("gpw_2007_list.txt", 30)
+    networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007, month=12, day=1), end_date=datetime.date(year=2009, month=1, day=1))
+    dates = pd.DatetimeIndex(networks.index)
+    distance = analyze.calculateDistances(data)
     for i in dates:
         G = nx.Graph()
         apex = []
