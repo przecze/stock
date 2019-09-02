@@ -14,15 +14,20 @@ def entropy():
     data = loader.loadCountAndClean("gpw_2007_list.txt", 30)
     networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007, month=12, day=1), end_date=datetime.date(year=2009, month=1, day=1))
     dates = pd.DatetimeIndex(networks.index)
-    distance = analyze.calculateDistances(data)
     for i in dates:
         G = nx.Graph()
         apex = []
         x.append(i)
+        a = 0
+        distance = analyze.calculateDistances(data[a:a+10)
+        a +=1
         for n in distance.index:
             for j in distance.index:
                 if n != j:
-                    G.add_edge(n,j,weight = distance[n][j])
+                    if G.has_edge(n,j):
+                        continue
+                    else:
+                        G.add_edge(n,j,weight = distance[n][j])
         network2 = mst(G)
         for l in nx.degree(network2):
             apex.append(l[1])
