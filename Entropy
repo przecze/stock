@@ -5,12 +5,14 @@ import analyze
 import loader
 import datetime
 import scipy.stats as sts
+from matplotlib import animation
 def mst(G):
     return nx.algorithms.tree.mst.minimum_spanning_tree(G)
 
+x = [] # aniamacja będzie korzystała z tych list - najpierw entropy() je wypełni, a dopiero potem będzie rysowana animacja
+y = []
+
 def entropy():
-    x = []
-    y = []
     data = loader.loadCountAndClean("gpw_2007_list.txt", 30)
     networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007, month=12, day=1), end_date=datetime.date(year=2009, month=1, day=1))
     dates = pd.DatetimeIndex(networks.index)
@@ -19,7 +21,10 @@ def entropy():
         G = nx.Graph()
         apex = []
         x.append(i)
-        distance = analyze.calculateDistances(data[a:a+10)
+        if a < 30:
+            distance = analyze.calculateDistances(data[a:a + 30])
+        else:
+            distance = analyze.calculateDistances(data[a-15:a+15])
         a +=1
         for n in distance.index:
             for j in distance.index:
@@ -31,11 +36,21 @@ def entropy():
         network2 = mst(G)
         for l in nx.degree(network2):
             apex.append(l[1])
-        entrop = sts.entropy(apex)
+        entrop = sts.entropy(apex) #próbowałem policzyć to "ręcznie" - wychodzi tak samo, ale wartości oscylują w okolicy 0,5, więc tu jest bliżej tego co na wykładzie
         y.append(entrop)
-    print(y)
-    plt.plot(x,y)
-    plt.xlabel("Time")
-    plt.ylabel("Value")
-    plt.title("Entropy")
-    plt.show()
+   fig = plt.figure()
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.title('Entropy')
+
+ax = plt.subplot(1,1,1)
+
+def animate(i):
+    xs = x[:i]
+    ys = y[:i]
+    ax.clear()
+    ax.plot(xs, ys)
+    return ax.plot(xs,ys)
+entropy()
+ani = animation.FuncAnimation(fig, animate, interval=10)
+plt.show()
