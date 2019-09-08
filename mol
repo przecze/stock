@@ -1,0 +1,69 @@
+import matplotlib.pyplot as plt
+import networkx as nx
+import pandas as pd
+import analyze
+import loader
+import datetime
+from matplotlib import animation
+
+def mst(G):
+    return nx.algorithms.tree.mst.minimum_spanning_tree(G)
+
+x = []
+y = []
+
+def mol():
+    data = loader.loadCountAndClean("gpw_2007_list.txt", 100)
+    networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2005, month=1, day=3), end_date=datetime.date(year=2009, month=12, day=31))
+    dates = pd.DatetimeIndex(networks.index)
+    a = 0
+    for i in dates:
+        G = nx.Graph()
+        apex = []
+        x.append(i)
+        if a < 20:
+            distance = analyze.calculateDistances(data[a:a + 20])
+        else:
+            distance = analyze.calculateDistances(data[a-10:a+10])
+        a +=1
+        for n in distance.index:
+            for j in distance.index:
+                if n != j:
+                    if G.has_edge(n,j):
+                        continue
+                    else:
+                        G.add_edge(n,j,weight = distance[n][j])
+        network2 = mst(G)
+        for l in nx.degree(network2):
+            apex.append(l[0])
+
+        mol = 0
+        for i in nx.degree_centrality(network2).keys():
+            if nx.degree_centrality(network2)[i] > mol:
+                mol = nx.degree_centrality(network2)[i]
+        for j in nx.degree_centrality(network2).keys():
+            if nx.degree_centrality(network2)[j] == mol:
+                s = j
+
+        ile = 0
+        for t in distance.index:
+            ile += len(nx.shortest_path(network2,s,t))
+        moll = ile//len(network2)
+        y.append(moll)
+
+fig = plt.figure()
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.title('Entropy')
+
+ax = plt.subplot(1,1,1)
+
+def animate(i):
+    xs = x[:i]
+    ys = y[:i]
+    ax.clear()
+    ax.plot(xs, ys)
+    return ax.plot(xs,ys)
+mol()
+ani = animation.FuncAnimation(fig, animate, interval=10)
+plt.show()
