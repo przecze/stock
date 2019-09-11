@@ -36,7 +36,7 @@ matplotlib.animation.Animation._blit_draw = _blit_draw
 import networkx as nx
 import datetime
 import pandas
-
+import scipy.stats as sts
 import loader
 import analyze
 
@@ -56,7 +56,33 @@ gs = matplotlib.gridspec.GridSpec(2, 1, height_ratios = [3, 1])
 ax_graph  = fig.add_subplot(gs[0])
 ax_plot = fig.add_subplot(gs[1])
 values = []
-
+def entropy():
+    val = []
+    a = 0
+    for i in dates:
+        G = nx.Graph()
+        apex = []
+        if a < 20:
+            distance = analyze.calculateDistances(data[a:a + 20])
+        else:
+            distance = analyze.calculateDistances(data[a-10:a+10])
+        for n in distance.index:
+            for j in distance.index:
+                if n != j:
+                    if G.has_edge(n,j):
+                        continue
+                    else:
+                        G.add_edge(n,j,weight = distance[n][j])
+        try:
+            network2 = mst(G)
+            for l in nx.degree(network2):
+                apex.append(l[1])
+            entrop = sts.entropy(apex) #próbowałem policzyć to "ręcznie" - wychodzi tak samo, ale wartości oscylują w okolicy 0,5, więc tu jest bliżej tego co na wykładzie
+        except ValueError:
+            entrop = val[-1]
+        val.append(entrop)
+        a+=1
+    return val
 FRAMES_PER_TRANSITION=10
 def animate(i):
     global G_old
