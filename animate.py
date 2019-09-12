@@ -54,21 +54,25 @@ networks = analyze.createNetworksSeries(data, start_date=datetime.date(year=2007
 dates = pandas.DatetimeIndex(networks.index)
 
 # prepare subplots for plotting. ax_graph is the area where we visualize the graph (top). ax_plot is the area for plotting how measured values change (bottow)
-fig = plt.figure()
-gs = matplotlib.gridspec.GridSpec(2, 1, height_ratios = [3, 1])
+fig = plt.figure(figsize=(10,10))
+gs = matplotlib.gridspec.GridSpec(4, 1, height_ratios = [3, 1,1,1], hspace=0.5)
 ax_graph  = fig.add_subplot(gs[0])
-ax_plot = fig.add_subplot(gs[1])
+ax_plot_e = fig.add_subplot(gs[1])
+ax_plot_e2 = fig.add_subplot(gs[2])
+ax_plot_m = fig.add_subplot(gs[3])
+gs.tight_layout(fig)
 
 #values
 ent = [] #entropy
 ent_eff = [] # entropy_efficient
-molemem = [] #mol
+mol = [] #mol
 
 # this means, transition between two steps (two networks) takes 10 frames of animation
 FRAMES_PER_TRANSITION=10
 
 # this method will be called every frame by FuncAnimation to update the plot
 def animate(i):
+    global legend
     # we'll be changing some global variables, so we need to declare them here
     global G_old
     global G_new
@@ -79,9 +83,9 @@ def animate(i):
     global date_new
     global widths_new
     global widths_old
-     global entrop
+    global ent
+    global ent_eff
     global mol
-    global entrop_efficient
     if(i == 0):
         G_new = mst(networks[0])
         # spring_layout generates positions for the nodes of the graph such that the structure of the graph is best visible
@@ -110,7 +114,7 @@ def animate(i):
         apex2 = []
         for l in nx.degree(network2):
             apex1.append(l[1])
-        entrop = sts.entropy(apex1)
+        ent.append(pandas.Series([sts.entropy(apex1)], index = [date_new]))
         #mol
         for l in nx.degree(network2):
             apex2.append(l[0])
@@ -121,9 +125,9 @@ def animate(i):
         way = 0
         for e in apex2:
             way += len(nx.shortest_path(network2,center[0],e)) -1
-        mol = way//len(apex2)
+        mol.append(pandas.Series([way/len(apex2)], index = [date_new]))
         #entropy_efficient
-        entrop_efficient = sts.entropy(widths_new)
+        ent_eff.append(pandas.Series([sts.entropy(widths_new)], index = [date_new]))
     ax_graph.clear()
     date_str = str(date_old) if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else str(date_new)
 
@@ -145,18 +149,22 @@ def animate(i):
 
     nx.draw_networkx_labels(G_to_draw, pos=pos_to_draw, ax=ax_graph, font_weigth='bold')
 
-    ax_plot.plot(pandas.concat(ent))
-    ax_plot.plot(pandas.concat(molemem))
-    ax_plot.plot(pandas.concat(ent_eff))
-    ax_plot.set_xlim(dates[0], dates[-1])
-    ax_plot.get_xaxis().set_visible(True)
-    ax_plot.get_yaxis().set_visible(True)
+    ax_plot_e.plot(pandas.concat(ent), 'r')
+    ax_plot_e.title.set_text("Entropy")
+    ax_plot_m.plot(pandas.concat(mol), 'g')
+    ax_plot_m.title.set_text("Mol")
+    ax_plot_e2.plot(pandas.concat(ent_eff), 'b')
+    ax_plot_e2.title.set_text("Edges entropy")
+    for ax_plot in (ax_plot_e, ax_plot_e2, ax_plot_m):
+        ax_plot.set_xlim(dates[0], dates[-1])
+        ax_plot.get_xaxis().set_visible(True)
+        ax_plot.get_yaxis().set_visible(True)
 
     # update alpha
     alpha +=1./FRAMES_PER_TRANSITION
 
     # if blit is True, we have to return objects to redraw in each frame
-    return (ax_plot, ax_graph, ttl)
+    return (ax_plot_e, ax_plot_m, ax_plot_e2, ax_graph, ttl)
 
 # this starts the animation in a window
 ani = animation.FuncAnimation(fig, animate, frames=len(networks)*FRAMES_PER_TRANSITION,
