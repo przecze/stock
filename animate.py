@@ -36,7 +36,7 @@ matplotlib.animation.Animation._blit_draw = _blit_draw
 import networkx as nx
 import datetime
 import pandas
-
+import scipy.stats as sts
 import loader
 import analyze
 
@@ -55,7 +55,10 @@ fig = plt.figure()
 gs = matplotlib.gridspec.GridSpec(2, 1, height_ratios = [3, 1])
 ax_graph  = fig.add_subplot(gs[0])
 ax_plot = fig.add_subplot(gs[1])
-values = []
+#values
+ent = [] #entropy
+ent_eff = [] # entropy_efficient
+molemem = [] #mol
 
 FRAMES_PER_TRANSITION=10
 def animate(i):
@@ -68,7 +71,9 @@ def animate(i):
     global date_new
     global widths_new
     global widths_old
-    global values
+     global entrop
+    global mol
+    global entrop_efficient
     if(i == 0):
         G_new = mst(networks[0])
         pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)))
@@ -84,7 +89,26 @@ def animate(i):
         pos_new = nx.spring_layout(G_new, k=2./np.sqrt(len(G_new.nodes)), pos=pos_old)
         widths_new = [1/G_new[u][v]['weight'] for u, v in G_new.edges()]
         alpha = 0.
-        values.append(pandas.Series([max(widths_new)], index = [date_new]))
+        #zwykła entropia
+        network2 = G_new
+        apex1 = []
+        apex2 = []
+        for l in nx.degree(network2):
+            apex1.append(l[1])
+        entrop = sts.entropy(apex1)
+        #mol
+        for l in nx.degree(network2):
+            apex2.append(l[0])
+        center = ['',0]
+        for r in network2.nodes():
+            if nx.degree(network2,r) > center[1]:
+                center = [r,nx.degree(network2,r)]
+        way = 0
+        for e in apex2:
+            way += len(nx.shortest_path(network2,center[0],e)) -1
+        mol = way//len(apex2)
+        #entropy_efficient
+        entrop_efficient = sts.entropy(widths_new)
     ax_graph.clear()
     ax_plot.clear()
     date_str = str(date_old) if i%FRAMES_PER_TRANSITION<(FRAMES_PER_TRANSITION/2) else str(date_new)
@@ -101,7 +125,9 @@ def animate(i):
 
     nx.draw_networkx_labels(G_to_draw, pos=pos_to_draw, ax=ax_graph, font_weigth='bold')
 
-    ax_plot.plot(pandas.concat(values))
+    ax_plot.plot(pandas.concat(ent))
+    ax_plot.plot(pandas.concat(molemem))
+    ax_plot.plot(pandas.concat(ent_eff))
     ax_plot.set_xlim(dates[0], dates[-1])
     ax_plot.get_xaxis().set_visible(True)
     ax_plot.get_yaxis().set_visible(True)
